@@ -4,6 +4,10 @@ import sharedData from "../entities/data.js";
 // Initialize the YouTube live chat module
 async function initLiveChat(io) {
   if (sharedData.config.enableLiveChat) {
+    // Set initialization timestamp to track new vs. old messages
+    const initTimestamp = Date.now() + 3000; // Now + 3 seconds
+    sharedData.liveChatInitTime = initTimestamp;
+    
     const mc = await Masterchat.init(sharedData.config.youtubeLivestreamID);
 
     mc.on("chat", (chat) => {
@@ -14,22 +18,36 @@ async function initLiveChat(io) {
         return;
       }
 
-      if (stringify(chat.message).substring(0, 4).toLowerCase() == "http") {
+      if (/\bhttps?:\/\/\S+/i.test(stringify(chat.message))) {
         console.log("URL detected, ignoring.");
         return;
       }
+    
 
-      sharedData.liveChatHistory.push({
+      const timestamp = Date.now();
+      const chatMessage = {
         authorName: chat.authorName,
         message: stringify(chat.message),
-      });
-      io.emit("liveChat", {
-        authorName: chat.authorName,
-        message: stringify(chat.message),
-      });
-      sharedData.ttsQueue.enqueue(
-        chat.authorName + " said, " + stringify(chat.message),
-      );
+        timestamp: timestamp
+      };
+      
+      sharedData.liveChatHistory.push(chatMessage);
+      io.emit("liveChat", chatMessage);
+      
+      // Only add to TTS queue if it's a new message (received after initialization)
+      if (timestamp >= sharedData.liveChatInitTime) {
+        sharedData.ttsQueue.enqueue(
+          chat.authorName + " said, " + stringify(chat.message),
+        );
+        
+        // Emit TTS status update to all clients
+        io.emit("ttsStatus", {
+          currentlyPlaying: sharedData.ttsPlaying,
+          isPaused: sharedData.ttsPaused,
+          queueSize: sharedData.ttsQueue.size(),
+          upcomingMessages: sharedData.ttsQueue.items
+        });
+      }
     });
 
     // Listen for any events

@@ -35,23 +35,72 @@ socket.on("heartRate", (heartRate) => {
   setHeartRate(heartRate);
 });
 
-// Socket event for recieving tts messages
+// Global reference to the current TTS audio element
+let currentTTSAudio = null;
+
+// Handle incoming TTS audio
 socket.on("ttsReady", ({ chat, mp3 }) => {
   try {
-    const audio = new Audio();
-    const mp3Blob = new Blob([mp3], { type: "audio/mp3" });
-    audio.src = URL.createObjectURL(mp3Blob);
+    // Force stop any existing audio before starting new playback
+    if (currentTTSAudio) {
+      currentTTSAudio.pause();
+      currentTTSAudio.src = "";
+      currentTTSAudio = null;
+    }
 
-    audio.onended = () => {
+    // Create a new audio element
+    const mp3Blob = new Blob([mp3], { type: "audio/mp3" });
+    const audioURL = URL.createObjectURL(mp3Blob);
+    
+    currentTTSAudio = new Audio(audioURL);
+
+    currentTTSAudio.onended = () => {
       socket.emit("ttsEnded");
+      URL.revokeObjectURL(audioURL);
+      currentTTSAudio = null;
     };
 
-    audio.play();
+    currentTTSAudio.play();
+    
+    socket.emit("getUpcomingTTS");
   } catch (error) {
     console.log(error);
   }
 
   console.log("TTS playing: " + chat);
+});
+
+// Pause audio
+socket.on("ttsPause", () => {
+  if (currentTTSAudio) {
+    currentTTSAudio.pause();
+    console.log("TTS paused");
+  }
+});
+
+// Resume audio
+socket.on("ttsResume", () => {
+  if (currentTTSAudio) {
+    currentTTSAudio.play();
+    console.log("TTS resumed");
+  }
+});
+
+// Skip audio (Hard stop for OBS Browser Source)
+socket.on("ttsSkip", () => {
+  if (currentTTSAudio) {
+    currentTTSAudio.pause();
+    currentTTSAudio.src = "";
+    currentTTSAudio.remove(); // Completely remove the element
+    currentTTSAudio = null;
+    socket.emit("ttsEnded");
+    console.log("TTS skipped");
+  }
+});
+
+// Handle TTS ended event
+socket.on("ttsEnded", () => {
+  socket.emit("getUpcomingTTS");
 });
 
 socket.on("editOverlayElements", (elements) => {

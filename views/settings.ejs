@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <html lang="en">
   <head>
@@ -16,7 +16,44 @@
   </head>
   <body class="bg-dark text-light">
     <div class="container mt-5">
-      <h2>Interacties Settings</h2>
+      <div class="d-flex align-items-center">
+        <h2 class="mr-3">Interacties Settings</h2>
+        <div class="form-check">
+          <input type="checkbox" class="form-check-input" id="showSensitiveData" />
+          <label class="form-check-label" for="showSensitiveData">Show Sensitive Data</label>
+        </div>
+      </div>
+
+      <!-- TTS Controls -->
+      <div class="card bg-secondary my-4">
+        <div class="card-body">
+          <h4 class="card-title">TTS Controls</h4>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <div class="card bg-dark">
+                <div class="card-body">
+                  <h5 class="card-title">Status</h5>
+                  <p>Current Status: <span id="ttsStatus">Loading...</span></p>
+                  <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-primary" id="pauseResumeBtn" onclick="ttsPaused ? resumeTTS() : pauseTTS()">Pause</button>
+                    <button type="button" class="btn btn-danger" id="skipBtn" onclick="skipTTS()">Skip</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-8">
+              <div class="card bg-dark">
+                <div class="card-body">
+                  <h5 class="card-title">Upcoming Messages</h5>
+                  <ul class="list-group" id="ttsQueueList">
+                    <li class="list-group-item bg-dark text-light">Loading...</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Overlay Elements Settings -->
       <div class="card bg-secondary my-4">
@@ -90,13 +127,13 @@
             </div>
             <div class="form-group">
               <label for="youtubeChannelId">YouTube Channel ID</label>
-              <input type="text" class="form-control" id="youtubeChannelId" />
+              <input type="password" class="form-control sensitive-field" id="youtubeChannelId" />
             </div>
             <div class="form-group">
               <label for="youtubeLivestreamId">Livestream ID</label>
               <input
-                type="text"
-                class="form-control"
+                type="password"
+                class="form-control sensitive-field"
                 id="youtubeLivestreamId"
               />
             </div>
@@ -118,21 +155,21 @@
           <form>
             <div class="form-group">
               <label for="youtubeApiKey">YouTube API Key</label>
-              <input type="text" class="form-control" id="youtubeApiKey" />
+              <input type="password" class="form-control sensitive-field" id="youtubeApiKey" />
             </div>
             <div class="form-group">
               <label for="scoreSaberApiProfileLink"
                 >Score Saber API Profile Link</label
               >
               <input
-                type="text"
-                class="form-control"
+                type="password"
+                class="form-control sensitive-field"
                 id="scoreSaberApiProfileLink"
               />
             </div>
             <div class="form-group">
               <label for="pusloidWidgetLink">Pusloid Widget Link</label>
-              <input type="text" class="form-control" id="pusloidWidgetLink" />
+              <input type="password" class="form-control sensitive-field" id="pusloidWidgetLink" />
             </div>
             <button
               type="button"

@@ -11,6 +11,12 @@ let config = {
   pusloidWidgetLink: "",
 };
 
+// TTS status variables
+let ttsPaused = false;
+let ttsPlaying = false;
+let ttsQueueSize = 0;
+let upcomingTTSMessages = [];
+
 const socket = io(`http://${window.location.hostname}:5500`, {
   query: {
     data: JSON.stringify({ client: "settings" }),
@@ -43,7 +49,35 @@ socket.on("initSettingsData", (data) => {
   $("#youtubeApiKey").val(config.youtubeAPIKey);
   $("#scoreSaberApiProfileLink").val(config.scoreSaberProfileLink);
   $("#pusloidWidgetLink").val(config.pusloidWidgetLink);
+  
+  // Initialize the sensitive data toggle
+  initSensitiveDataToggle();
+  
+  // Get initial TTS status
+  refreshTTSStatus();
 });
+
+// Socket event for receiving TTS status
+socket.on("ttsStatus", (status) => {
+  ttsPlaying = status.currentlyPlaying;
+  ttsPaused = status.isPaused;
+  ttsQueueSize = status.queueSize;
+  upcomingTTSMessages = status.upcomingMessages;
+  
+  updateTTSStatusDisplay();
+});
+
+// Function to initialize the sensitive data toggle
+function initSensitiveDataToggle() {
+  // Add event listener to the checkbox
+  $("#showSensitiveData").on("change", function() {
+    const isChecked = $(this).prop("checked");
+    const inputType = isChecked ? "text" : "password";
+    
+    // Toggle all sensitive fields between password and text type
+    $(".sensitive-field").attr("type", inputType);
+  });
+}
 
 function setOverlayElements() {
   console.log(
@@ -128,5 +162,71 @@ function setGeneralSettings() {
     socket.emit("updateGeneralSettings", generalSettings);
   } else {
     console.log("Socket.IO: Not connected.");
+  }
+}
+
+// TTS Control Functions
+function pauseTTS() {
+  if (socket && socket.connected) {
+    socket.emit("ttsPause");
+    ttsPaused = true;
+    updateTTSStatusDisplay();
+  }
+}
+
+function resumeTTS() {
+  if (socket && socket.connected) {
+    socket.emit("ttsResume");
+    ttsPaused = false;
+    updateTTSStatusDisplay();
+  }
+}
+
+function skipTTS() {
+  if (socket && socket.connected) {
+    socket.emit("ttsSkip");
+    refreshTTSStatus();
+  }
+}
+
+function refreshTTSStatus() {
+  if (socket && socket.connected) {
+    socket.emit("getUpcomingTTS");
+  }
+}
+
+function removeFromQueue(index) {
+  if (socket && socket.connected) {
+    socket.emit("removeFromQueue", index);
+  }
+}
+
+function updateTTSStatusDisplay() {
+  // Update status text
+  let statusText = ttsPlaying ? "Playing" : "Idle";
+  if (ttsPaused) statusText = "Paused";
+  $("#ttsStatus").text(statusText);
+  
+  // Update button states
+  $("#pauseResumeBtn").text(ttsPaused ? "Resume" : "Pause");
+  // Always enable the pause/resume button
+  $("#pauseResumeBtn").prop("disabled", false);
+  $("#skipBtn").prop("disabled", !ttsPlaying);
+  
+  // Update queue display
+  const queueList = $("#ttsQueueList");
+  queueList.empty();
+  
+  if (ttsQueueSize === 0) {
+    queueList.append("<li class='list-group-item bg-dark text-light'>No messages in queue</li>");
+  } else {
+    upcomingTTSMessages.forEach((message, index) => {
+      queueList.append(`
+        <li class='list-group-item bg-dark text-light d-flex justify-content-between align-items-center'>
+          <span>${index + 1}. ${message}</span>
+          <button class='btn btn-sm btn-danger' onclick='removeFromQueue(${index})'>Remove</button>
+        </li>
+      `);
+    });
   }
 }

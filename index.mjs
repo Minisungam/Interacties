@@ -1,4 +1,4 @@
-// Christopher Magnus 2023
+// Christopher Magnus 2024
 // CC BY-NC-ND 4.0
 
 // Imports
@@ -6,13 +6,13 @@ import sharedData from "./entities/data.js";
 import { initLiveChat } from "./services/liveChat.js";
 import { refreshGoalData, refreshPlayerData } from "./services/fetchAPI.js";
 import { initHeartRate } from "./services/heartRate.js";
-import { processTTSQueue } from "./services/tts.js";
+import { processTTSQueue, pauseTTS, resumeTTS, skipTTS, getUpcomingTTS, removeFromQueue } from "./services/tts.js";
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import fs from "fs";
 
-const appVersion = "1.0.0";
+const appVersion = "1.0.1";
 const asciiArt = `
   _____       _                      _   _           
  |_   _|     | |                    | | (_)          
@@ -35,6 +35,8 @@ const PORT = process.env.PORT || 5500;
 // Express Setup
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
+app.set('view engine', 'ejs');
+app.set('views', './views');
 
 // Read config file
 sharedData.config = JSON.parse(fs.readFileSync("./config.json", "UTF-8"));
@@ -43,7 +45,7 @@ sharedData.goalData.target_amount = sharedData.config.subscriberGoal;
 // Express GET requests
 app.get("/", (req, res) => {
   res.render("index");
-});
+}); 
 
 // Express GET request sending the user to a settings page
 app.get("/settings", (req, res) => {
@@ -118,6 +120,37 @@ io.on("connection", (socket) => {
   socket.on("ttsEnded", () => {
     console.log("TTS ended.");
     sharedData.ttsPlaying = false;
+    
+    // Send updated TTS status to all clients
+    const ttsStatus = getUpcomingTTS();
+    io.emit("ttsStatus", ttsStatus);
+  });
+
+  // TTS Control Events
+  socket.on("ttsPause", () => {
+    pauseTTS(io);
+  });
+
+  socket.on("ttsResume", () => {
+    resumeTTS(io);
+  });
+
+  socket.on("ttsSkip", () => {
+    skipTTS(io);
+  });
+
+  socket.on("getUpcomingTTS", () => {
+    const ttsStatus = getUpcomingTTS();
+    socket.emit("ttsStatus", ttsStatus);
+  });
+  
+  socket.on("removeFromQueue", (index) => {
+    if (removeFromQueue(index)) {
+      console.log(`Removed message at index ${index} from TTS queue.`);
+      // Send updated queue status
+      const ttsStatus = getUpcomingTTS();
+      io.emit("ttsStatus", ttsStatus);
+    }
   });
 });
 
@@ -143,7 +176,7 @@ function setup() {
   refreshGoalData();
   refreshPlayerData();
   initLiveChat(io);
-  processTTSQueue();
+  processTTSQueue(io);
 }
 
 function saveSettings() {
