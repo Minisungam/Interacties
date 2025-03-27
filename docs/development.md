@@ -23,7 +23,7 @@ cp config_template.json config.json
 - YouTube API key
 - YouTube channel ID
 - ScoreSaber profile link
-- Pusloid widget link (if applicable)
+- Pusloid WebSocket access token (required for heart rate monitoring)
 
 5. Place Google Cloud credentials file as `google_auth.json` in project root
 
@@ -54,7 +54,7 @@ The application will be available at:
   - `settings.ejs` - Settings page template
 - `services/` - Application services
   - `fetchAPI.js` - YouTube and ScoreSaber API integration
-  - `heartRate.js` - Heart rate monitoring
+  - `heartRate.js` - Heart rate monitoring via WebSocket connection to Pulsoid
   - `liveChat.js` - Live chat handling
   - `tts.js` - Text-to-speech processing
 - `entities/` - Data models

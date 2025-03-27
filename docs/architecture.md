@@ -21,8 +21,14 @@ The Interacties application follows a modular architecture with these main compo
   - data.js
   - queue.js
 
+## Real-Time Components
+- Heart rate monitoring via WebSocket connection to Pulsoid
+- Live chat integration through YouTube API
+- Socket.io for real-time client updates
+
 ## Data Flow
 1. Client requests are handled by `index.mjs`
-2. Requests are routed to appropriate services
+2. Real-time data streams (WebSocket/APIs) are managed by services
 3. Services interact with entities as needed
-4. Responses are rendered using EJS templates
+4. Updates are pushed to clients via Socket.io
+5. Static content is rendered using EJS templates

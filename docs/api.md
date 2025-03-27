@@ -26,7 +26,7 @@
 ### From Server to Client (Overlay)
 - `initData` - Initial overlay data on connection
 - `liveChat` - New live chat messages (contains authorName, message)
-- `heartRate` - Heart rate updates
+- `heartRate` - Heart rate updates (via WebSocket from Pulsoid)
 - `ttsReady` - New TTS audio ready (contains chat text and mp3 data)
 - `ttsPause` - Pause TTS playback
 - `ttsResume` - Resume TTS playback
@@ -64,7 +64,7 @@
 {
   "youtubeAPIKey": string,
   "scoreSaberProfileLink": string,
-  "pusloidWidgetLink": string
+  "pusloidAccessToken": string
 }
 ```
 

@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  interacties:
+    image: minisungam/interacties:latest
+    container_name: interacties
+    restart: unless-stopped
+    ports:
+      - "5500:5500"
+    volumes:
+      - ./config.json:/usr/src/interacties/config.json

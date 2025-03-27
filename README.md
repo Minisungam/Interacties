@@ -9,7 +9,7 @@ The license is quite restrictive (CC BY-NC-ND 4.0) at this point because this pr
 ## Features:
 
 - [x] Beat Saber rank pulled from ScoreSaber API
-- [x] Heart-rate scraped from Pulsoid
+- [x] Heart-rate via Pulsoid WebSocket API (real-time updates)
 - [x] Timed animations
 - [x] Modular component use based on parameters set on page call
 - [x] Settings in a config file
@@ -57,25 +57,47 @@ Finally, we can start the server.
 $ npm run devStart
 ```
 
-## Docker
+## Docker Deployment
 
-If you're familiar with docker this should be trivial to you but here are some basic steps:
+Interacties is available as an official Docker image. For production deployment:
 
+1. Prepare your configuration:
+```bash
+cp config_template.json config.json
+# Edit config.json with your credentials
 ```
-# Clone the repository
-$ git clone https://github.com/Minisungam/Interacties.git
 
-# Move into the directory
-$ cd interacties
-
-# Create the config file from the template
-$ cp config_template.json config.json
-
-# Open the config.json file in an editor of your choice and fill in the blanks
-
-# Build the image
-$ docker build -t minisungam/interacties .
-
-# Run the container
-$ docker run -p 5500:5500 -d minisungam/interacties
+2. Run the official Docker image:
+```bash
+docker run -d \
+  -p 5500:5500 \
+  -v $(pwd)/config.json:/usr/src/interacties/config.json \
+  minisungam/interacties:latest
 ```
+
+Options:
+- `-d`: Run in detached mode (background)
+- `-p 5500:5500`: Map container port to host
+- `-v`: Mount your config file (recommended for security)
+
+Note: Using a volume mount (-v) keeps your credentials out of the container image.
+
+## Docker Compose
+
+For simpler deployment using Docker Compose:
+
+1. Create and configure your `config.json` as shown above
+2. Start the container:
+```bash
+docker-compose up -d
+```
+
+To stop:
+```bash
+docker-compose down
+```
+
+The compose file includes:
+- Automatic restarts
+- Port mapping
+- Config file volume mount
