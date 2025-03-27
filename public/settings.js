@@ -7,7 +7,7 @@ let config = {
   subscriberGoal: 0,
   youtubeChannelID: "",
   youtubeLiveStreamID: "",
-  youtubeAPIKey: "",
+  googleAPIKey: "",
   scoreSaberProfileLink: "",
   pusloidWidgetLink: "",
 };
@@ -37,7 +37,7 @@ socket.on("initSettingsData", (data) => {
   config.subscriberGoal = data.goalData.target_amount;
   config.youtubeChannelID = data.youtubeChannelID;
   config.youtubeLivestreamId = data.youtubeLivestreamID;
-  config.youtubeAPIKey = data.youtubeAPIKey;
+  config.googleAPIKey = data.googleAPIKey;
   config.scoreSaberProfileLink = data.scoreSaberProfileLink;
   config.pusloidWidgetLink = data.pusloidWidgetLink;
 
@@ -49,7 +49,7 @@ socket.on("initSettingsData", (data) => {
   $("#subscriberGoal").val(config.subscriberGoal);
   $("#youtubeChannelId").val(config.youtubeChannelID);
   $("#youtubeLivestreamId").val(config.youtubeLivestreamId);
-  $("#youtubeApiKey").val(config.youtubeAPIKey);
+  $("#googleAPIKey").val(config.googleAPIKey);
   $("#scoreSaberApiProfileLink").val(config.scoreSaberProfileLink);
   $("#pusloidWidgetLink").val(config.pusloidWidgetLink);
   
@@ -152,12 +152,12 @@ function setGeneralSettings() {
       : "Not initialized",
   );
 
-  config.youtubeAPIKey = $("#youtubeApiKey").val();
+  config.googleAPIKey = $("#googleAPIKey").val();
   config.scoreSaberProfileLink = $("#scoreSaberApiProfileLink").val();
   config.pusloidWidgetLink = $("#pusloidWidgetLink").val();
 
   generalSettings = {
-    youtubeApiKey: config.youtubeAPIKey,
+    googleAPIKey: config.googleAPIKey,
     scoreSaberProfileLink: config.scoreSaberProfileLink,
     pusloidWidgetLink: config.pusloidWidgetLink,
   };

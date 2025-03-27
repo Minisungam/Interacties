@@ -49,23 +49,59 @@ socket.on("ttsReady", ({ chat, mp3 }) => {
       currentTTSAudio = null;
     }
 
-    // Create a new audio element
-    const mp3Blob = new Blob([mp3], { type: "audio/mp3" });
-    const audioURL = URL.createObjectURL(mp3Blob);
-    
-    currentTTSAudio = new Audio(audioURL);
+    // Create a new audio element with better error handling
+    try {
+      console.log("Received TTS audio data:", mp3.length, "bytes");
+      
+      // Convert base64 to binary if needed
+      const binaryData = typeof mp3 === 'string'
+        ? Uint8Array.from(atob(mp3), c => c.charCodeAt(0))
+        : mp3;
 
-    currentTTSAudio.onended = () => {
-      socket.emit("ttsEnded");
-      URL.revokeObjectURL(audioURL);
-      currentTTSAudio = null;
-    };
+      const mp3Blob = new Blob([binaryData], { type: "audio/mp3" });
+      const audioURL = URL.createObjectURL(mp3Blob);
+      
+      currentTTSAudio = new Audio(audioURL);
+      currentTTSAudio.preload = "auto";
 
-    currentTTSAudio.play();
-    
-    socket.emit("getUpcomingTTS");
-  } catch (error) {
-    console.log(error);
+      currentTTSAudio.onerror = (e) => {
+        console.error("TTS Audio error:", e);
+        socket.emit("ttsEnded");
+        URL.revokeObjectURL(audioURL);
+        currentTTSAudio = null;
+      };
+
+      currentTTSAudio.onended = () => {
+        console.log("TTS playback completed");
+        socket.emit("ttsEnded");
+        URL.revokeObjectURL(audioURL);
+        currentTTSAudio = null;
+      };
+
+      const playPromise = currentTTSAudio.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.then(_ => {
+          console.log("TTS playback started successfully.");
+          socket.emit("getUpcomingTTS");
+        }).catch(error => {
+          console.error("TTS playback failed (autoplay likely blocked?):", error);
+          socket.emit("ttsEnded"); // Treat as ended if playback fails
+          URL.revokeObjectURL(audioURL);
+          currentTTSAudio = null;
+        });
+      }
+    } catch (innerError) {
+       console.error("Error processing TTS audio data:", innerError);
+       socket.emit("ttsEnded"); // Ensure server knows about the failure
+    }
+  } catch (outerError) { // Catch for the outer try block (e.g., if currentTTSAudio manipulation fails)
+    console.error("Outer TTS handling error:", outerError);
+    if (currentTTSAudio && currentTTSAudio.src) {
+       URL.revokeObjectURL(currentTTSAudio.src);
+    }
+    currentTTSAudio = null;
+    socket.emit("ttsEnded");
   }
 
   console.log("TTS playing: " + chat);

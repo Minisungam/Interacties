@@ -3,8 +3,7 @@
 ## Prerequisites
 - Node.js (v18+ recommended)
 - npm (comes with Node.js)
-- Google Cloud credentials (for TTS functionality)
-- YouTube API key (for subscriber tracking)
+- Google API Key (for YouTube Data API v3 and Cloud Text-to-Speech API)
 
 ## Setup Instructions
 
@@ -20,12 +19,10 @@ cp config_template.json config.json
 ```
 
 4. Edit `config.json` with your:
-- YouTube API key
+- Google API key (ensure it has access to YouTube Data API v3 and Cloud Text-to-Speech API)
 - YouTube channel ID
 - ScoreSaber profile link
 - Pusloid WebSocket access token (required for heart rate monitoring)
-
-5. Place Google Cloud credentials file as `google_auth.json` in project root
 
 ## Running the Application
 Start the development server:
@@ -62,8 +59,7 @@ The application will be available at:
   - `queue.js` - TTS queue management
 
 ## Environment Variables
-- `PORT` - Server port (default: 5500)
-- `GOOGLE_APPLICATION_CREDENTIALS` - Path to Google Cloud credentials
+ - `PORT` - Server port (default: 5500)
 
 ## Deployment
 For production deployment:

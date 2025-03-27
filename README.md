@@ -43,7 +43,7 @@ $ cd interacties
 $ npm install
 ```
 
-Next, run the command below to create the config.json file, then open it up in a text editor and fill in your information.
+Next, run the command below to create the `config.json` file. Open it in a text editor and fill in your information. You will need a Google API key with access to both the YouTube Data API v3 and the Cloud Text-to-Speech API.
 
 ```
 # Create the config file from the template

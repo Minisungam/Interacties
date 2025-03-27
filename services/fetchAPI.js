@@ -8,7 +8,7 @@ async function refreshGoalData() {
       "https://www.googleapis.com/youtube/v3/channels?id=" +
         sharedData.config.youtubeChannelID +
         "&key=" +
-        sharedData.config.youtubeAPIKey +
+        sharedData.config.googleAPIKey +
         "&part=statistics",
       { method: "GET" },
     )

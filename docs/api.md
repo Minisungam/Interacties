@@ -5,7 +5,6 @@
 ### Main Pages
 - `/` - Main overlay page (renders index.ejs)
 - `/settings` - Settings page (renders settings.ejs)
-- `/getTTS` - GET - Downloads TTS audio file (output.mp3)
 
 ## Socket.IO Events
 
@@ -62,7 +61,7 @@
 ### General Settings
 ```json
 {
-  "youtubeAPIKey": string,
+  "googleAPIKey": string,
   "scoreSaberProfileLink": string,
   "pusloidAccessToken": string
 }

@@ -1,27 +1,45 @@
-import textToSpeech from "@google-cloud/text-to-speech";
 import sharedData from "../entities/data.js";
+import fetch from 'node-fetch';
+import fs from 'fs';
+import path from 'path';
 
 // TTS Function
 async function getTTS(message) {
-  const ttsClient = new textToSpeech.TextToSpeechClient();
-
-  // Construct the request
-  const request = {
+  const requestBody = {
     input: { text: message },
-    // Select the language and SSML voice gender (optional)
     voice: {
-      name: "en-US-Studio-O",
+      name: "en-US-Chirp3-HD-Charon",
       languageCode: "en-US",
       ssmlGender: "FEMALE",
     },
-    // Select the type of audio encoding
     audioConfig: { audioEncoding: "MP3" },
   };
 
   try {
-    // Performs the text-to-speech request
-    const [response] = await ttsClient.synthesizeSpeech(request);
-    return response.audioContent;
+    const response = await fetch(
+      `https://texttospeech.googleapis.com/v1/text:synthesize?key=${sharedData.config.googleAPIKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      }
+    );
+    
+    const data = await response.json();
+    
+    const ttsDir = path.join(process.cwd(), 'public', 'tts');
+    if (!fs.existsSync(ttsDir)) {
+      fs.mkdirSync(ttsDir, { recursive: true });
+    }
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `tts-${timestamp}.mp3`;
+    const filePath = path.join(ttsDir, filename);
+    fs.writeFileSync(filePath, Buffer.from(data.audioContent, 'base64'));
+    
+    console.log(`Saved TTS MP3 to: ${filePath}`);
+    return data.audioContent;
   } catch (error) {
     console.log(error);
     return false;

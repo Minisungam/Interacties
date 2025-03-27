@@ -24,8 +24,6 @@ const asciiArt = `
 Version: ${appVersion}
 `;
 
-process.env.GOOGLE_APPLICATION_CREDENTIALS = "google_auth.json";
-
 // Server Setup
 const app = express();
 const server = http.createServer(app);
@@ -62,7 +60,7 @@ io.on("connection", (socket) => {
       goalData: sharedData.goalData,
       youtubeChannelID: sharedData.config.youtubeChannelID,
       youtubeLivestreamID: sharedData.config.youtubeLivestreamID,
-      youtubeAPIKey: sharedData.config.youtubeAPIKey,
+      googleAPIKey: sharedData.config.googleAPIKey,
       scoreSaberProfileLink: sharedData.config.scoreSaberProfileLink,
       pusloidWidgetLink: sharedData.config.pusloidWidgetLink,
     });
@@ -111,7 +109,7 @@ io.on("connection", (socket) => {
   socket.on("updateGeneralSettings", (updatedData) => {
     console.log("General Settings updated.");
 
-    sharedData.youtubeAPIKey = updatedData.youtubeAPIKey;
+    sharedData.googleAPIKey = updatedData.googleAPIKey;
     sharedData.scoreSaberProfileLink = updatedData.scoreSaberProfileLink;
     sharedData.pusloidWidgetLink = updatedData.pusloidWidgetLink;
 
@@ -189,7 +187,7 @@ function saveSettings() {
     subscriberGoal: sharedData.config.subscriberGoal,
     youtubeChannelID: sharedData.config.youtubeChannelID,
     youtubeLivestreamID: sharedData.config.youtubeLivestreamID,
-    youtubeAPIKey: sharedData.config.youtubeAPIKey,
+    googleAPIKey: sharedData.config.googleAPIKey,
     scoreSaberProfileLink: sharedData.config.scoreSaberProfileLink,
     pusloidWidgetLink: sharedData.config.pusloidWidgetLink,
     savedSettings: {
