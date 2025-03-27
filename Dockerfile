@@ -2,7 +2,7 @@ FROM node:20
 
 RUN useradd -m -u 1001 node_user
 
-WORKDIR /usr/src/interacties
+WORKDIR /app
 
 COPY package*.json ./
 

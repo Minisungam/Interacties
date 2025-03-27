@@ -30,7 +30,7 @@ cp config_template.json config.json
 ## Running the Application
 Start the development server:
 ```bash
-node index.mjs
+npm run devStart
 ```
 
 The application will be available at:

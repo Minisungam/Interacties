@@ -8,4 +8,4 @@ services:
     ports:
       - "5500:5500"
     volumes:
-      - ./config.json:/usr/src/interacties/config.json
+      - ./config.json:/app/config.json

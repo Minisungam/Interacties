@@ -4,8 +4,6 @@ const PULSOID_WS_URL = 'wss://dev.pulsoid.net/api/v1/data/real_time';
 const RECONNECT_DELAY = 5000;
 
 async function initHeartRate(ioServer) {
-  console.log('Initializing heart rate monitor...');
-  
   // Validate configuration
   if (!sharedData.config.enableHeartRate) {
     console.log('Heart rate monitoring disabled in config');
