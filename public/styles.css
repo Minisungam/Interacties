@@ -115,14 +115,30 @@ p {
     0 -1px black;
 }
 
+#customBoxContainer {
+  display: none;
+  position: absolute;
+  left: 0.4em;
+  bottom: 0.4em;
+  width: 455px;
+  min-height: 245px;
+  border-radius: 1em;
+  border: 2px solid black;
+  background: linear-gradient(45deg, #18a2ee 0%, #e23c6b 100%);
+  background-size: 400% 400%;
+  animation: gradient 5s ease infinite;
+  z-index: -1;
+}
+
 #heartRate {
   display: none;
   position: absolute;
   overflow: auto;
-  left: 0.5em;
-  bottom: 0.5em;
+  left: 1em;
+  bottom: 1em;
   font-size: 86px;
   color: #e23c6b;
+  z-index: 1;
 }
 
 #heartRateText {
@@ -146,6 +162,7 @@ p {
   height: 140px;
   width: 400px;
   font-size: 18px;
+  z-index: 1;
 }
 
 .chatMessage {

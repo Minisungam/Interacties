@@ -1,4 +1,4 @@
-var enableBS, enableHR, enableSC, enableLC;
+var enableBS, enableHR, enableSC, enableLC, enableCB;
 var goalData;
 var heartRate;
 var playingAudio = false;
@@ -21,6 +21,7 @@ socket.on("initData", (data) => {
   enableHR = data.config.enableHR;
   enableSC = data.config.enableSC;
   enableLC = data.config.enableLC;
+  enableCB = data.config.enableCB;
 
   setOverlayElements();
 });
@@ -110,6 +111,7 @@ socket.on("editOverlayElements", (elements) => {
   enableHR = elements.enableHR;
   enableSC = elements.enableSC;
   enableLC = elements.enableLC;
+  enableCB = elements.enableCB;
 
   setOverlayElements();
 });
@@ -167,6 +169,14 @@ function setOverlayElements() {
   } else {
     console.log("Heart rate disabled.");
     $("#heartRate").css("display", "none");
+  }
+
+  if (enableCB) {
+    console.log("Custom box enabled.");
+    $("#customBoxContainer").css("display", "block");
+  } else {
+    console.log("Custom box disabled.");
+    $("#customBoxContainer").css("display", "none");
   }
 
   if (enableLC && enableHR) {

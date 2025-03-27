@@ -4,7 +4,7 @@ This is my first official individual project!
 
 My goal for this is to create a browser based OBS overlay for a livestream.
 
-The license is quite restrictive \(CC BY-NC-ND 4.0\) at this point because this project is my baby, but will likely be less restrictive once it matures.
+The license is quite restrictive (CC BY-NC-ND 4.0) at this point because this project is my baby, but will likely be less restrictive once it matures.
 
 ## Features:
 
@@ -19,6 +19,10 @@ The license is quite restrictive \(CC BY-NC-ND 4.0\) at this point because this 
 - [x] Setup instructions
 
 Features and functionality are subject to change.
+
+## Documentation
+
+For detailed documentation including architecture, API reference, and development guide, see the [Knowledge Base](./docs/README.md).
 
 ## Installation Requirements:
 

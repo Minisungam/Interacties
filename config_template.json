@@ -8,11 +8,12 @@
   "youtubeLivestreamID": "",
   "youtubeAPIKey": "",
   "scoreSaberProfileLink": "",
-  "pusloidWidgetLink": "",
+  "pusloidAccessToken": "",
   "savedSettings": {
     "enableBS": true,
     "enableHR": true,
     "enableSC": true,
-    "enableLC": true
+    "enableLC": true,
+    "enableCB": true
   }
 }

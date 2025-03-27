@@ -3,6 +3,7 @@ let config = {
   enableSC: false,
   enableHR: false,
   enableLC: false,
+  enableCB: false,
   subscriberGoal: 0,
   youtubeChannelID: "",
   youtubeLiveStreamID: "",
@@ -32,6 +33,7 @@ socket.on("initSettingsData", (data) => {
   config.enableSC = data.savedSettings.enableSC;
   config.enableHR = data.savedSettings.enableHR;
   config.enableLC = data.savedSettings.enableLC;
+  config.enableCB = data.savedSettings.enableCB;
   config.subscriberGoal = data.goalData.target_amount;
   config.youtubeChannelID = data.youtubeChannelID;
   config.youtubeLivestreamId = data.youtubeLivestreamID;
@@ -43,6 +45,7 @@ socket.on("initSettingsData", (data) => {
   $("#showHeartRate").prop("checked", config.enableHR);
   $("#showSubscriberCount").prop("checked", config.enableSC);
   $("#showLiveChat").prop("checked", config.enableLC);
+  $("#showCustomBox").prop("checked", config.enableCB);
   $("#subscriberGoal").val(config.subscriberGoal);
   $("#youtubeChannelId").val(config.youtubeChannelID);
   $("#youtubeLivestreamId").val(config.youtubeLivestreamId);
@@ -93,12 +96,14 @@ function setOverlayElements() {
   config.enableHR = $("#showHeartRate").prop("checked");
   config.enableSC = $("#showSubscriberCount").prop("checked");
   config.enableLC = $("#showLiveChat").prop("checked");
+  config.enableCB = $("#showCustomBox").prop("checked");
 
   overlayElements = {
     enableBS: config.enableBS,
     enableHR: config.enableHR,
     enableSC: config.enableSC,
     enableLC: config.enableLC,
+    enableCB: config.enableCB,
   };
 
   if (socket && socket.connected) {

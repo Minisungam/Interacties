@@ -12,7 +12,7 @@ import http from "http";
 import { Server } from "socket.io";
 import fs from "fs";
 
-const appVersion = "1.0.1";
+const appVersion = "1.1.0";
 const asciiArt = `
   _____       _                      _   _           
  |_   _|     | |                    | | (_)          
@@ -85,6 +85,7 @@ io.on("connection", (socket) => {
     sharedData.config.savedSettings.enableHR = Boolean(updatedData.enableHR);
     sharedData.config.savedSettings.enableSC = Boolean(updatedData.enableSC);
     sharedData.config.savedSettings.enableLC = Boolean(updatedData.enableLC);
+    sharedData.config.savedSettings.enableCB = Boolean(updatedData.enableCB);
 
     io.emit("editOverlayElements", updatedData);
 
@@ -196,6 +197,7 @@ function saveSettings() {
       enableHR: sharedData.config.savedSettings.enableHR,
       enableSC: sharedData.config.savedSettings.enableSC,
       enableLC: sharedData.config.savedSettings.enableLC,
+      enableCB: sharedData.config.savedSettings.enableCB,
     },
   };
 

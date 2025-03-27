@@ -1,56 +1,73 @@
-import puppeteer from "puppeteer";
 import sharedData from "../entities/data.js";
 
-// Scrape heart rate information from Pulsoid
-async function initHeartRate(io) {
-  if (sharedData.config.enableHeartRate) {
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-    const page = await browser.newPage();
-    page.setDefaultTimeout(0);
+const PULSOID_WS_URL = 'wss://dev.pulsoid.net/api/v1/data/real_time';
+const RECONNECT_DELAY = 5000;
 
-    await page.goto(sharedData.config.pusloidWidgetLink);
-    console.log("Navigated to the Pulsoid widget page.");
-
-    let selector = "text";
-
-    // Wait for the text element to appear on the page
-    try {
-      await page.waitForSelector(selector).catch("HR timeout. Not using it?");
-    } catch (error) {
-      console.log("HR timeout. Not using it?");
-      return;
-    }
-
-    // Find the heart rate information by its element name
-    // (The ID changes on each load, and it's the only text element)
-    const heartRateElement = await page.$(selector, { timeout: 300 });
-
-    // Get the initial value of the element
-    sharedData.heartRate = await heartRateElement.evaluate(
-      (el) => el.innerHTML,
-    );
-    console.log("HR found, first value: " + sharedData.heartRate);
-    io.emit("heartRate", sharedData.heartRate);
-
-    // Continuously monitor the element for changes
-    while (sharedData.config.enableHeartRate) {
-      // Update heart rate
-      let newValue = await heartRateElement.evaluate((el) => el.innerHTML);
-
-      if (newValue != sharedData.heartRate) {
-        sharedData.heartRate = newValue;
-        io.emit("heartRate", newValue);
-      }
-
-      // Wait and check again
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    await browser.close();
+async function initHeartRate(ioServer) {
+  console.log('Initializing heart rate monitor...');
+  
+  // Validate configuration
+  if (!sharedData.config.enableHeartRate) {
+    console.log('Heart rate monitoring disabled in config');
+    return;
   }
+
+  if (!sharedData.config.pusloidAccessToken) {
+    console.error('Missing Pulsoid access token in config');
+    return;
+  }
+
+  const url = `${PULSOID_WS_URL}?access_token=${sharedData.config.pusloidAccessToken}&response_mode=legacy_json`;
+  let socket;
+  let reconnectTimeout;
+
+  function connect() {
+    console.log('Connecting to Pulsoid WebSocket...');
+    socket = new WebSocket(url);
+
+    socket.onopen = () => {
+      console.log('Successfully connected to Pulsoid WebSocket');
+      clearTimeout(reconnectTimeout);
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        
+        if (message.data && message.data.heartRate !== undefined) {
+          const heartRate = message.data.heartRate;
+          sharedData.heartRate = heartRate.toString();
+          ioServer.emit("heartRate", sharedData.heartRate);
+        } else {
+          console.warn('Received message with unexpected format:', message);
+        }
+      } catch (err) {
+        console.error('Error processing message:', err);
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      socket.close();
+    };
+
+    socket.onclose = (event) => {
+      console.log(`WebSocket closed. Code: ${event.code}, Reason: ${event.reason}`);
+      if (event.code !== 1000) {
+        console.log(`Reconnecting in ${RECONNECT_DELAY/1000} seconds...`);
+        reconnectTimeout = setTimeout(connect, RECONNECT_DELAY);
+      }
+    };
+  }
+
+  connect();
+
+  return () => {
+    clearTimeout(reconnectTimeout);
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.close(1000, 'Server shutdown');
+    }
+  };
 }
 
 export { initHeartRate };
