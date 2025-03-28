@@ -1,12 +1,12 @@
-FROM node:22-alpine
+FROM node:lts-alpine
 
-RUN useradd -m -u 1001 node_user
+RUN adduser -D -u 1001 node_user
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --omit=dev
 
 COPY public/ public/
 COPY views/ views/
@@ -14,7 +14,7 @@ COPY services/ services/
 COPY entities/ entities/
 COPY index.mjs ./
 
-RUN chown -R node_user:node_user /app/public
+RUN chown -R node_user:node_user /app
 
 USER node_user
 
