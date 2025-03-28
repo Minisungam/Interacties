@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.2.0]
 ### Added
 - TTS Replay: Added functionality to replay the last 3 TTS messages.
   - Settings page now lists the last 3 messages with "Replay on Overlay" buttons.
@@ -19,6 +19,8 @@
 ### Fixed
 - Proper handling of Pulsoid WebSocket message format
 - Improved error handling and reconnection logic
+- Docker image changed to 22-alpine to reduce size and improve performance
+- Fixed docker permissions issue with tts folder
 
 ## [1.1.0] - 2025-03-27
 ### Added
