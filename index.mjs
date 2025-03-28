@@ -11,8 +11,9 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import fs from "fs";
+import path from "path"; // Import path module
 
-const appVersion = "1.1.0";
+const appVersion = "1.2.0";
 const asciiArt = `
   _____       _                      _   _           
  |_   _|     | |                    | | (_)          
@@ -42,7 +43,7 @@ sharedData.goalData.target_amount = sharedData.config.subscriberGoal;
 
 // Express GET requests
 app.get("/", (req, res) => {
-  res.render("index");
+  res.render("overlay");
 }); 
 
 // Express GET request sending the user to a settings page
@@ -62,7 +63,7 @@ io.on("connection", (socket) => {
       youtubeLivestreamID: sharedData.config.youtubeLivestreamID,
       googleAPIKey: sharedData.config.googleAPIKey,
       scoreSaberProfileLink: sharedData.config.scoreSaberProfileLink,
-      pusloidWidgetLink: sharedData.config.pusloidWidgetLink,
+      pusloidAccessToken: sharedData.config.pusloidAccessToken,
     });
   } else if (clientData.client == "overlay") {
     socket.emit("initData", {
@@ -91,17 +92,30 @@ io.on("connection", (socket) => {
   });
 
   socket.on("updateLivestreamSettings", (updatedData) => {
-    console.log("Livestream Settings updated.");
+    console.log("Received Livestream Settings update:", updatedData);
 
-    if (sharedData.subscriberGoal != Number(updatedData.subscriberGoal)) {
+    const oldLivestreamID = sharedData.config.youtubeLivestreamID;
+    const newLivestreamID = updatedData.youtubeLivestreamId; // Corrected key from settings.js
+
+    if (sharedData.config.subscriberGoal != Number(updatedData.subscriberGoal)) { // Check config directly
+      console.log("Subscriber goal updated.");
       io.emit("goalDataUpdate", {
-        current_amount: sharedData.goalData.current_amount,
+        current_amount: sharedData.goalData.current_amount, // Assuming goalData is still relevant or updated elsewhere
         target_amount: Number(updatedData.subscriberGoal),
       });
     }
-    sharedData.subscriberGoal = Number(updatedData.subscriberGoal);
-    sharedData.youtubeChannelID = updatedData.youtubeChannelID;
-    sharedData.youtubeLivestreamID = updatedData.youtubeLivestreamID;
+    sharedData.config.subscriberGoal = Number(updatedData.subscriberGoal); // Update config directly
+    sharedData.config.youtubeChannelID = updatedData.youtubeChannelID;
+    sharedData.config.youtubeLivestreamID = newLivestreamID; // Update config directly
+
+    // Re-initialize live chat only if the ID changed
+    if (oldLivestreamID !== newLivestreamID) {
+      console.log(`Livestream ID changed from ${oldLivestreamID} to ${newLivestreamID}. Re-initializing live chat.`);
+      initLiveChat(io, newLivestreamID); // Call with the new ID
+      // No need to emit liveChatCleared here, initLiveChat handles it if ID is empty
+      // Instead, emit a specific event for the overlay to clear chat *before* new messages arrive
+      io.emit("liveStreamChanged");
+    }
 
     saveSettings();
   });
@@ -111,7 +125,7 @@ io.on("connection", (socket) => {
 
     sharedData.googleAPIKey = updatedData.googleAPIKey;
     sharedData.scoreSaberProfileLink = updatedData.scoreSaberProfileLink;
-    sharedData.pusloidWidgetLink = updatedData.pusloidWidgetLink;
+    sharedData.pusloidAccessToken = updatedData.pusloidAccessToken;
 
     saveSettings();
   });
@@ -151,6 +165,19 @@ io.on("connection", (socket) => {
       io.emit("ttsStatus", ttsStatus);
     }
   });
+  
+  // Handle request from settings page to replay a TTS file on the overlay
+  socket.on("replayTTS", ({ filePath }) => {
+    console.log(`Received request to replay TTS: ${filePath}`);
+    // Emit an event specifically for overlay clients
+    io.emit("playReplayTTS", { filePath: filePath });
+  });
+  
+  // Handle request from settings page for the initial recent TTS list
+  socket.on("getInitialRecentTTS", () => {
+    // Send current list back only to the requesting client
+    socket.emit('recentTTSUpdate', sharedData.recentTTSFiles);
+  });
 });
 
 // Express GET requests to send data from the server
@@ -168,28 +195,53 @@ const updateGoalData = setInterval(function () {
   refreshGoalData();
 }, 30000);
 
+// Function to clear the TTS output folder on startup
+function clearTTSFolder() {
+  const ttsDir = path.join(process.cwd(), 'public', 'tts');
+  if (fs.existsSync(ttsDir)) {
+    fs.readdir(ttsDir, (err, files) => {
+      if (err) {
+        console.error("Error reading TTS directory:", err);
+        return;
+      }
+
+      for (const file of files) {
+        const filePath = path.join(ttsDir, file);
+        fs.unlink(filePath, err => {
+          if (err) {
+            console.error(`Error deleting TTS file ${filePath}:`, err);
+          } else {
+            console.log(`Deleted old TTS file: ${filePath}`);
+          }
+        });
+      }
+    });
+  } else {
+    // If the directory doesn't exist, create it
+    fs.mkdirSync(ttsDir, { recursive: true });
+    console.log(`Created TTS directory: ${ttsDir}`);
+  }
+}
+
 // Initial setup function
 function setup() {
   console.log(asciiArt);
+  clearTTSFolder();
   initHeartRate(io);
   refreshGoalData();
   refreshPlayerData();
-  initLiveChat(io);
+  initLiveChat(io, sharedData.config.youtubeLivestreamID);
   processTTSQueue(io);
 }
 
 function saveSettings() {
   var config = {
-    enableHeartRate: sharedData.config.enableHeartRate,
-    enableBeatSaber: sharedData.config.enableBeatSaber,
-    enableLiveChat: sharedData.config.enableLiveChat,
-    enableSubscriberCount: sharedData.config.enableSubscriberCount,
     subscriberGoal: sharedData.config.subscriberGoal,
     youtubeChannelID: sharedData.config.youtubeChannelID,
     youtubeLivestreamID: sharedData.config.youtubeLivestreamID,
     googleAPIKey: sharedData.config.googleAPIKey,
     scoreSaberProfileLink: sharedData.config.scoreSaberProfileLink,
-    pusloidWidgetLink: sharedData.config.pusloidWidgetLink,
+    pusloidAccessToken: sharedData.config.pusloidAccessToken,
     savedSettings: {
       enableBS: sharedData.config.savedSettings.enableBS,
       enableHR: sharedData.config.savedSettings.enableHR,
@@ -201,7 +253,6 @@ function saveSettings() {
 
   try {
     fs.writeFileSync("./config.json", JSON.stringify(config));
-    console.log("Settings saved to disk.");
   } catch (err) {
     console.log(err);
   }

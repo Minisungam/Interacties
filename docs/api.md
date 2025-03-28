@@ -3,7 +3,7 @@
 ## Web Endpoints
 
 ### Main Pages
-- `/` - Main overlay page (renders index.ejs)
+- `/` - Main overlay page (renders overlay.ejs)
 - `/settings` - Settings page (renders settings.ejs)
 
 ## Socket.IO Events
@@ -21,20 +21,24 @@
 - `ttsSkip` - Skips current TTS message
 - `getUpcomingTTS` - Requests TTS queue status
 - `removeFromQueue` - Removes item from TTS queue (with index parameter)
+- `replayTTS` - Requests the overlay play a specific recent TTS file (payload: `{ filePath: string }`)
+- `getInitialRecentTTS` - Requests the initial list of recent TTS messages upon connection
 
 ### From Server to Client (Overlay)
 - `initData` - Initial overlay data on connection
 - `liveChat` - New live chat messages (contains authorName, message)
 - `heartRate` - Heart rate updates (via WebSocket from Pulsoid)
-- `ttsReady` - New TTS audio ready (contains chat text and mp3 data)
+- `ttsReady` - New TTS audio ready (payload: `{ chat: string, mp3: Buffer, recentFiles: Array<{path: string, message: string}> }`)
 - `ttsPause` - Pause TTS playback
 - `ttsResume` - Resume TTS playback
 - `ttsSkip` - Skip current TTS message
 - `editOverlayElements` - Updates overlay element visibility
+- `playReplayTTS` - Instructs overlay to play a specific recent TTS file (payload: `{ filePath: string }`)
 
 ### From Server to Client (Settings)
 - `initSettingsData` - Initial settings data on connection
 - `ttsStatus` - Current TTS status (contains: currentlyPlaying, isPaused, queueSize, upcomingMessages)
+- `recentTTSUpdate` - Sends the updated list of recent TTS messages (payload: `Array<{path: string, message: string}>`)
 
 ## Data Structures
 

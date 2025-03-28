@@ -43,17 +43,17 @@ The application will be available at:
 
 ### Directories
 - `public/` - Static files served to clients
-  - `script.js` - Overlay client logic
+  - `overlay.js` - Overlay client logic
   - `settings.js` - Settings page logic
   - `styles.css` - Main stylesheet
 - `views/` - EJS templates
-  - `index.ejs` - Overlay template
+  - `overlay.ejs` - Overlay template
   - `settings.ejs` - Settings page template
 - `services/` - Application services
   - `fetchAPI.js` - YouTube and ScoreSaber API integration
   - `heartRate.js` - Heart rate monitoring via WebSocket connection to Pulsoid
   - `liveChat.js` - Live chat handling
-  - `tts.js` - Text-to-speech processing
+  - `tts.js` - Text-to-speech processing, file management (saving/cleanup), and replay coordination
 - `entities/` - Data models
   - `data.js` - Shared application data
   - `queue.js` - TTS queue management

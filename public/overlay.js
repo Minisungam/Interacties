@@ -31,6 +31,12 @@ socket.on("liveChat", ({ authorName, message }) => {
   displayChat(authorName, message);
 });
 
+// Socket event for clearing live chat when stream changes
+socket.on("liveStreamChanged", () => {
+  console.log("Livestream changed, clearing chat display.");
+  $("#liveChat").html(""); // Clear the chat container
+});
+
 // Socket event for recieving the heart rate
 socket.on("heartRate", (heartRate) => {
   setHeartRate(heartRate);
@@ -38,10 +44,17 @@ socket.on("heartRate", (heartRate) => {
 
 // Global reference to the current TTS audio element
 let currentTTSAudio = null;
+let recentTTSFiles = []; // Store recent TTS files received from the server
 
 // Handle incoming TTS audio
-socket.on("ttsReady", ({ chat, mp3 }) => {
+socket.on("ttsReady", ({ chat, mp3, recentFiles: updatedRecentFiles }) => { // Destructure recentFiles
   try {
+    // Store the updated list of recent files
+    if (updatedRecentFiles) {
+      recentTTSFiles = updatedRecentFiles;
+      console.log("Received recent TTS files:", recentTTSFiles); // Log for debugging/future use
+    }
+
     // Force stop any existing audio before starting new playback
     if (currentTTSAudio) {
       currentTTSAudio.pause();
@@ -52,7 +65,7 @@ socket.on("ttsReady", ({ chat, mp3 }) => {
     // Create a new audio element with better error handling
     try {
       console.log("Received TTS audio data:", mp3.length, "bytes");
-      
+
       // Convert base64 to binary if needed
       const binaryData = typeof mp3 === 'string'
         ? Uint8Array.from(atob(mp3), c => c.charCodeAt(0))
@@ -60,7 +73,7 @@ socket.on("ttsReady", ({ chat, mp3 }) => {
 
       const mp3Blob = new Blob([binaryData], { type: "audio/mp3" });
       const audioURL = URL.createObjectURL(mp3Blob);
-      
+
       currentTTSAudio = new Audio(audioURL);
       currentTTSAudio.preload = "auto";
 
@@ -79,7 +92,7 @@ socket.on("ttsReady", ({ chat, mp3 }) => {
       };
 
       const playPromise = currentTTSAudio.play();
-      
+
       if (playPromise !== undefined) {
         playPromise.then(_ => {
           console.log("TTS playback started successfully.");
@@ -150,6 +163,32 @@ socket.on("editOverlayElements", (elements) => {
   enableCB = elements.enableCB;
 
   setOverlayElements();
+});
+
+// Handle request to play a specific recent TTS file
+socket.on("playReplayTTS", ({ filePath }) => {
+  console.log(`Received request to play replay TTS: ${filePath}`);
+  try {
+    // Stop any currently playing TTS first
+    if (currentTTSAudio) {
+      currentTTSAudio.pause();
+      currentTTSAudio.src = ""; // Release the object URL if applicable
+      currentTTSAudio = null;
+      socket.emit("ttsEnded"); // Notify server that previous TTS stopped
+      console.log("Stopped current TTS for replay.");
+    }
+
+    // Play the requested file
+    const audio = new Audio(`/${filePath.replace(/\\/g, '/')}`); // Ensure forward slashes and root path
+    audio.onerror = (e) => console.error("Error playing replay audio:", e);
+    audio.play().catch(e => console.error("Replay playback failed:", e));
+
+    // Note: We don't manage currentTTSAudio or emit ttsEnded for replays
+    // to avoid interfering with the main TTS queue logic. Replays are fire-and-forget.
+
+  } catch (error) {
+    console.error("Error handling playReplayTTS:", error);
+  }
 });
 /********* End socket events *********/
 

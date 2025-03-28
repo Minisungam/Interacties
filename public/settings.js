@@ -9,7 +9,7 @@ let config = {
   youtubeLiveStreamID: "",
   googleAPIKey: "",
   scoreSaberProfileLink: "",
-  pusloidWidgetLink: "",
+  pusloidAccessToken: "",
 };
 
 // TTS status variables
@@ -26,6 +26,8 @@ const socket = io(`http://${window.location.hostname}:5500`, {
 
 socket.on("connect", () => {
   console.log("Socket.IO: Connected.");
+  // Request initial recent TTS list after connecting
+  socket.emit("getInitialRecentTTS"); 
 });
 
 socket.on("initSettingsData", (data) => {
@@ -39,7 +41,7 @@ socket.on("initSettingsData", (data) => {
   config.youtubeLivestreamId = data.youtubeLivestreamID;
   config.googleAPIKey = data.googleAPIKey;
   config.scoreSaberProfileLink = data.scoreSaberProfileLink;
-  config.pusloidWidgetLink = data.pusloidWidgetLink;
+  config.pusloidAccessToken = data.pusloidAccessToken;
 
   $("#showBeatSaber").prop("checked", config.enableBS);
   $("#showHeartRate").prop("checked", config.enableHR);
@@ -51,7 +53,7 @@ socket.on("initSettingsData", (data) => {
   $("#youtubeLivestreamId").val(config.youtubeLivestreamId);
   $("#googleAPIKey").val(config.googleAPIKey);
   $("#scoreSaberApiProfileLink").val(config.scoreSaberProfileLink);
-  $("#pusloidWidgetLink").val(config.pusloidWidgetLink);
+  $("#pusloidAccessToken").val(config.pusloidAccessToken);
   
   // Initialize the sensitive data toggle
   initSensitiveDataToggle();
@@ -68,6 +70,12 @@ socket.on("ttsStatus", (status) => {
   upcomingTTSMessages = status.upcomingMessages;
   
   updateTTSStatusDisplay();
+});
+
+// Socket event for receiving real-time updates for recent TTS messages
+socket.on('recentTTSUpdate', (updatedRecentFiles) => {
+  console.log("Received recentTTSUpdate");
+  updateRecentTTSList(updatedRecentFiles);
 });
 
 // Function to initialize the sensitive data toggle
@@ -154,12 +162,12 @@ function setGeneralSettings() {
 
   config.googleAPIKey = $("#googleAPIKey").val();
   config.scoreSaberProfileLink = $("#scoreSaberApiProfileLink").val();
-  config.pusloidWidgetLink = $("#pusloidWidgetLink").val();
+  config.pusloidAccessToken = $("#pusloidAccessToken").val();
 
   generalSettings = {
     googleAPIKey: config.googleAPIKey,
     scoreSaberProfileLink: config.scoreSaberProfileLink,
-    pusloidWidgetLink: config.pusloidWidgetLink,
+    pusloidAccessToken: config.pusloidAccessToken,
   };
 
   if (socket && socket.connected) {
@@ -233,5 +241,44 @@ function updateTTSStatusDisplay() {
         </li>
       `);
     });
+  }
+}
+
+// Function to update the list of recent TTS messages for replay
+function updateRecentTTSList(recentMessages) {
+  try {
+    const recentList = $("#recentTTSList");
+    recentList.empty();
+
+    if (!recentMessages || recentMessages.length === 0) { // Added check for null/undefined
+      recentList.append("<li class='list-group-item bg-dark text-light'>No recent TTS messages found.</li>");
+    } else {
+      // Display in reverse order (newest first)
+      [...recentMessages].reverse().forEach(messageData => { // Use spread to avoid modifying original array if passed by ref
+        // Ensure path uses forward slashes for URL compatibility
+        const filePath = messageData.path.replace(/\\/g, '/'); 
+        recentList.append(`
+          <li class='list-group-item bg-dark text-light d-flex justify-content-between align-items-center'>
+            <span>${messageData.message || 'TTS Message'}</span>
+            <button class='btn btn-sm btn-info' onclick='requestTTSReplay("${filePath}")'>Replay</button>
+          </li>
+        `);
+      });
+    }
+  } catch (error) {
+    console.error("Error updating recent TTS messages list:", error);
+    const recentList = $("#recentTTSList");
+    recentList.empty();
+    recentList.append("<li class='list-group-item bg-dark text-light text-danger'>Error loading recent TTS messages.</li>");
+  }
+}
+
+// Function to request the overlay plays a specific TTS file
+function requestTTSReplay(filePath) {
+  if (socket && socket.connected) {
+    console.log(`Requesting replay of: ${filePath}`);
+    socket.emit("replayTTS", { filePath: filePath });
+  } else {
+    console.error("Socket not connected, cannot request TTS replay.");
   }
 }

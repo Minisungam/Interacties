@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 // TTS Function
-async function getTTS(message) {
+async function getTTS(message, io) { // Add io parameter
   const requestBody = {
     input: { text: message },
     voice: {
@@ -36,12 +36,34 @@ async function getTTS(message) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `tts-${timestamp}.mp3`;
     const filePath = path.join(ttsDir, filename);
+    const relativeFilePath = path.join('tts', filename);
     fs.writeFileSync(filePath, Buffer.from(data.audioContent, 'base64'));
     
+    // Add the new file path to the recent list
+    sharedData.recentTTSFiles.push({ path: relativeFilePath, message: message });
+
+    // Limit the number of saved files to 3
+    const maxFiles = 3;
+    if (sharedData.recentTTSFiles.length > maxFiles) {
+      const oldestFile = sharedData.recentTTSFiles.shift();
+      const oldestFilePath = path.join(ttsDir, path.basename(oldestFile.path));
+      try {
+        fs.unlinkSync(oldestFilePath);
+        console.log(`Deleted oldest TTS file: ${oldestFilePath}`);
+      } catch (unlinkError) {
+        console.error(`Error deleting old TTS file ${oldestFilePath}:`, unlinkError);
+      }
+    }
+
+    // Emit update to settings clients
+    if (io) {
+      io.emit('recentTTSUpdate', sharedData.recentTTSFiles);
+    }
+
     console.log(`Saved TTS MP3 to: ${filePath}`);
     return data.audioContent;
   } catch (error) {
-    console.log(error);
+    console.error("Error in getTTS:", error);
     return false;
   }
 }
@@ -51,9 +73,14 @@ async function processTTSQueue(io) {
     if (!sharedData.ttsQueue.isEmpty() && !sharedData.ttsPlaying && !sharedData.ttsPaused) {
       console.log("TTS queue not empty, sending next message.");
       var chat = sharedData.ttsQueue.dequeue();
-      let tts = await getTTS(chat);
+      let tts = await getTTS(chat, io); // Pass io here
       if (tts) {
-        io.emit("ttsReady", { chat: chat, mp3: tts }, { binary: true });
+        // Include recent files in the ttsReady event
+        io.emit("ttsReady", {
+          chat: chat,
+          mp3: tts,
+          recentFiles: sharedData.recentTTSFiles // Add recent files here
+        }, { binary: true });
         sharedData.ttsPlaying = true;
         
         // Send updated TTS status to all clients

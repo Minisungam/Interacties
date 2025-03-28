@@ -1,8 +1,4 @@
 {
-  "enableHeartRate": true,
-  "enableBeatSaber": true,
-  "enableLiveChat": true,
-  "enableSubscriberCount": true,
   "subscriberGoal": 0,
   "youtubeChannelID": "",
   "youtubeLivestreamID": "",

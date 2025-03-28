@@ -9,6 +9,7 @@ const sharedData = {
   ttsQueue: new Queue(),
   ttsPlaying: false,
   ttsPaused: false,
+  recentTTSFiles: [],
   config: {},
 };
 

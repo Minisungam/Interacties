@@ -52,6 +52,19 @@
               </div>
             </div>
           </div>
+          <!-- Recent TTS Files -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <div class="card bg-dark">
+                <div class="card-body">
+                  <h5 class="card-title">Recent TTS Messages (Last 3)</h5>
+                  <ul class="list-group" id="recentTTSList">
+                    <li class="list-group-item bg-dark text-light">Loading...</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -178,8 +191,8 @@
               />
             </div>
             <div class="form-group">
-              <label for="pusloidWidgetLink">Pusloid Widget Link</label>
-              <input type="password" class="form-control sensitive-field" id="pusloidWidgetLink" />
+              <label for="pusloidAccessToken">Pusloid Access Token</label>
+              <input type="password" class="form-control sensitive-field" id="pusloidAccessToken" />
             </div>
             <button
               type="button"

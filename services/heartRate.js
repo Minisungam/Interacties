@@ -5,11 +5,6 @@ const RECONNECT_DELAY = 5000;
 
 async function initHeartRate(ioServer) {
   // Validate configuration
-  if (!sharedData.config.enableHeartRate) {
-    console.log('Heart rate monitoring disabled in config');
-    return;
-  }
-
   if (!sharedData.config.pusloidAccessToken) {
     console.error('Missing Pulsoid access token in config');
     return;
