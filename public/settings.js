@@ -18,7 +18,8 @@ let ttsPlaying = false;
 let ttsQueueSize = 0;
 let upcomingTTSMessages = [];
 
-const socket = io(`http://${window.location.hostname}:5500`, {
+// Connect to the same host/port that served the page, automatically using ws:// or wss://
+const socket = io({
   query: {
     data: JSON.stringify({ client: "settings" }),
   },

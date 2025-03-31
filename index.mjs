@@ -27,6 +27,8 @@ Version: ${appVersion}
 
 // Server Setup
 const app = express();
+// Trust the first hop proxy (common setup)
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server);
 const PORT = process.env.PORT || 5500;
